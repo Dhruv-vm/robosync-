@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar';
 import FeaturesSection from '../components/FeaturesSection';
 import SimulationSection from '../components/SimulationSection';
 import Footer from '../components/Footer';
+import { SimulationProvider } from '../context/SimulationContext';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('features');
@@ -22,28 +23,30 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="app-wrapper">
-      {/* 1. Main Hero: Cinematic Warehouse Scroll Sequence */}
-      <WarehouseFrameScroll onHeroComplete={handleHeroComplete} />
+    <SimulationProvider>
+      <div className="app-wrapper">
+        {/* 1. Main Hero: Cinematic Warehouse Scroll Sequence */}
+        <WarehouseFrameScroll onHeroComplete={handleHeroComplete} />
 
-      {/* 2. Sticky Navbar (Revealed after Hero sequence) */}
-      <Navbar
-        isVisible={navbarVisible}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-      />
+        {/* 2. Sticky Navbar (Revealed after Hero sequence) */}
+        <Navbar
+          isVisible={navbarVisible}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        />
 
-      {/* 3. Interactive Views (Features & Simulation) */}
-      <main className="main-view-container" id="interactive-dashboard">
-        {activeTab === 'features' ? (
-          <FeaturesSection />
-        ) : (
-          <SimulationSection />
-        )}
-      </main>
+        {/* 3. Interactive Views (Features & Simulation) */}
+        <main className="main-view-container" id="interactive-dashboard">
+          {activeTab === 'features' ? (
+            <FeaturesSection />
+          ) : (
+            <SimulationSection />
+          )}
+        </main>
 
-      {/* 4. Footer */}
-      <Footer />
-    </div>
+        {/* 4. Footer */}
+        <Footer />
+      </div>
+    </SimulationProvider>
   );
 }

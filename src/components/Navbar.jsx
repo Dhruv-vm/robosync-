@@ -1,7 +1,14 @@
 import React from 'react';
 import { Layers, Cpu, Activity } from 'lucide-react';
+import { useSimulation, ConnectionStatus } from '../context/SimulationContext';
 
 export default function Navbar({ isVisible, activeTab, onTabChange }) {
+  const { connectionStatus, simulationData } = useSimulation();
+
+  const isConnected = connectionStatus === ConnectionStatus.CONNECTED;
+  const isConnecting = connectionStatus === ConnectionStatus.CONNECTING;
+  const activeAmrs = simulationData?.system?.active_amrs || (isConnected ? 6 : 0);
+
   return (
     <nav className={`site-navbar ${isVisible ? 'navbar-visible' : 'navbar-hidden'}`}>
       <div className="navbar-inner">
@@ -15,9 +22,10 @@ export default function Navbar({ isVisible, activeTab, onTabChange }) {
             </svg>
             <span className="nav-brand-title">ROBOSYNC</span>
           </div>
-          <div className="nav-status-pill">
+
+          <div className={`nav-status-pill ${isConnected ? 'online' : isConnecting ? 'connecting' : 'offline'}`}>
             <span className="nav-status-dot" />
-            <span>ONLINE</span>
+            <span>{isConnected ? 'ONLINE' : isConnecting ? 'CONNECTING' : 'OFFLINE'}</span>
           </div>
         </div>
 
@@ -44,7 +52,7 @@ export default function Navbar({ isVisible, activeTab, onTabChange }) {
           <div className="telemetry-counter">
             <Activity size={13} color="var(--accent-cyan)" />
             <span>FLEET:</span>
-            <span className="telemetry-counter-val">14 AMRs ACTIVE</span>
+            <span className="telemetry-counter-val">{activeAmrs} AMRs ACTIVE</span>
           </div>
         </div>
       </div>
