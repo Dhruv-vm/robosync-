@@ -39,6 +39,10 @@ pnpm-debug.log*
 ehthumbs.db
 Thumbs.db
 
-# Teammate simulation subfolder (excluded from frontend UI checkpoint)
-simulation-system/
-simulation_system/
+# Simulation system - keep source, ignore local/build artifacts
+simulation_system/.venv/
+simulation_system/node_modules/
+simulation_system/pybullet-3.2.7/
+simulation_system/pybullet-3.2.7.tar.gz
+simulation_system/**/__pycache__/
+simulation_system/**/*.pyc
