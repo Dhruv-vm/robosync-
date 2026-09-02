@@ -46,3 +46,5 @@ simulation_system/pybullet-3.2.7/
 simulation_system/pybullet-3.2.7.tar.gz
 simulation_system/**/__pycache__/
 simulation_system/**/*.pyc
+simulation_system/pybullet-build.log
+simulation_system/.DS_Store
