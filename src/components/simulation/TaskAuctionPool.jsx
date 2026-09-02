@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSimulation } from '../../context/SimulationContext';
-import { Layers, ArrowRight, CheckCircle2, Clock } from 'lucide-react';
+import { Layers, ArrowRight, CheckCircle2, Clock, Package } from 'lucide-react';
 
 const AMR_THEME = {
   'AMR-1': '#38bdf8',
@@ -16,20 +16,20 @@ export default function TaskAuctionPool() {
   const tasks = simulationData?.tasks || [];
 
   return (
-    <div className="simulation-panel-card">
-      <div className="sim-panel-header">
-        <div className="sim-panel-title">
-          <Layers size={15} color="var(--accent-cyan)" />
-          <span>Decentralized Task Auction Pool</span>
+    <div className="ops-panel-section">
+      <div className="ops-panel-header">
+        <div className="ops-panel-title-wrap">
+          <Package size={14} color="var(--accent-cyan)" />
+          <span className="ops-panel-title">MISSION POOL // CONTRACT NET BIDDING</span>
         </div>
-        <div className="sim-panel-badge">
-          {tasks.length} Missions
+        <div className="ops-panel-count">
+          {tasks.length} LOGISTICS ORDERS
         </div>
       </div>
 
-      <div className="task-auction-container">
+      <div className="task-auction-manifest">
         {tasks.length === 0 ? (
-          <div className="empty-panel-state">No active logistics tasks in pool</div>
+          <div className="ops-empty-log">No active logistics missions in bidding pool</div>
         ) : (
           tasks.map((t) => {
             const assignedColor = t.assigned_to ? (AMR_THEME[t.assigned_to] || '#38bdf8') : '#c084fc';
@@ -53,22 +53,25 @@ export default function TaskAuctionPool() {
             }
 
             return (
-              <div key={t.task_id} className="task-order-item">
-                <div className="task-left-meta">
-                  <div className="task-id-badge">{t.task_id}</div>
-                  <div className="task-route-desc">
-                    <span>Pickup {t.pickup_zone} {t.pickup_pos ? `(${t.pickup_pos.join(',')})` : ''}</span>
-                    <ArrowRight size={11} className="route-arrow" />
-                    <span>Drop {t.dropoff_zone} {t.dropoff_pos ? `(${t.dropoff_pos.join(',')})` : ''}</span>
+              <div key={t.task_id} className="task-manifest-card">
+                <div className="task-card-left">
+                  <div className="task-id-tag mono">{t.task_id}</div>
+                  <div className="task-routing-info">
+                    <span className="routing-point">P: {t.pickup_zone}</span>
+                    <ArrowRight size={10} className="routing-arrow" />
+                    <span className="routing-point">D: {t.dropoff_zone}</span>
+                    {t.priority > 1.0 && (
+                      <span className="priority-pill">PRIORITY {t.priority}</span>
+                    )}
                   </div>
                 </div>
 
-                <div className="task-right-meta">
-                  <div className="assigned-bidder" style={{ color: assignedColor }}>
-                    {t.assigned_to ? `Winner: ${t.assigned_to}` : 'AUCTIONING'}
+                <div className="task-card-right">
+                  <div className="task-winner-tag" style={{ color: assignedColor }}>
+                    {t.assigned_to ? `WINNER: ${t.assigned_to}` : 'AUCTIONING'}
                   </div>
                   <div
-                    className="task-status-pill"
+                    className="task-state-badge"
                     style={{ backgroundColor: statusBg, color: statusColor, borderColor: `${statusColor}40` }}
                   >
                     {statusLabel}

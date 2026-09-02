@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useSimulation } from '../../context/SimulationContext';
-import { Play, Pause, RotateCcw, AlertOctagon, Sliders, Zap } from 'lucide-react';
+import { Play, Pause, RotateCcw, AlertOctagon, Sliders, Zap, Shield, GitCommit } from 'lucide-react';
 
 const SCENARIOS = [
-  { id: 'normal', name: 'NORMAL RUN', desc: 'Run normal multi-AMR operations' },
-  { id: 'deadlock', name: 'DEADLOCK DEMO', desc: 'Demonstrate decentralized deadlock detection and resolution' },
-  { id: 'intersection', name: 'INTERSECTION DEMO', desc: 'Demonstrate collision-free intersection coordination' },
-  { id: 'reservation', name: 'RESERVATION DEMO', desc: 'Demonstrate spatial-temporal cell reservations' },
-  { id: 'blocked', name: 'BLOCKED AISLE DEMO', desc: 'Demonstrate dynamic obstacle detection and local A* replanning' },
-  { id: 'reset', name: 'RESET SIMULATION', desc: 'Reset the simulation to its initial state' },
+  { id: 'normal', name: 'NORMAL RUN', desc: 'Standard parallel task bidding & dispatch' },
+  { id: 'deadlock', name: 'DEADLOCK DEMO', desc: 'Decentralized priority scoring & cycle resolution' },
+  { id: 'intersection', name: 'INTERSECTION DEMO', desc: 'Bottleneck mutual exclusion & yield locks' },
+  { id: 'reservation', name: 'RESERVATION DEMO', desc: 'Spatial-temporal cell lookahead reservations' },
+  { id: 'blocked', name: 'BLOCKED AISLE DEMO', desc: 'Obstacle detection & dynamic local A* replanning' },
+  { id: 'reset', name: 'RESET SIMULATION', desc: 'Restore fleet to docks & clear task queue' },
 ];
 
 const SPEEDS = [0.25, 0.5, 1.0, 2.0, 5.0, 10.0];
@@ -95,61 +95,62 @@ export default function ScenarioControls() {
   };
 
   return (
-    <div className="scenario-controls-panel">
-      {/* Top Controls Toolbar */}
-      <div className="controls-top-bar">
-        <div className="controls-brand-meta">
-          <Sliders size={15} color="var(--accent-cyan)" />
-          <span className="controls-brand-name">SIH DEMONSTRATION CONTROLS</span>
-          <span className={`sim-state-badge ${isPaused ? 'paused' : 'running'}`}>
+    <div className="ops-control-console">
+      {/* Console Top Toolbar */}
+      <div className="console-top-row">
+        <div className="console-brand-tag">
+          <div className="console-tag-dot" />
+          <span className="console-tag-title">MISSION CONTROL // BENCHMARKS &amp; DISPATCH</span>
+          <span className={`console-state-pill ${isPaused ? 'paused' : 'running'}`}>
             <span className="state-pulse-dot" />
-            <span>{isPaused ? 'PAUSED' : 'RUNNING'}</span>
+            <span>{isPaused ? 'SIMULATION PAUSED' : 'PHYSICS RUNNING'}</span>
           </span>
         </div>
 
-        <div className="playback-actions-group">
+        <div className="console-playback-actions">
           <button
-            className="ctrl-action-btn primary"
+            className="btn-console-action primary"
             onClick={handleStart}
             disabled={isActionPending}
-            title="Start / Resume simulation"
+            title="Start / Resume physics loop"
           >
-            <Play size={13} />
-            <span>Start</span>
+            <Play size={12} fill="currentColor" />
+            <span>START</span>
           </button>
 
           <button
-            className={`ctrl-action-btn ${isPaused ? 'paused-btn' : 'warning'}`}
+            className={`btn-console-action ${isPaused ? 'active-pause' : 'warning'}`}
             onClick={handleTogglePause}
             disabled={isActionPending}
-            title="Pause / Resume simulation"
+            title="Pause / Resume physics loop"
           >
-            <Pause size={13} />
-            <span>{isPaused ? 'Resume' : 'Pause'}</span>
+            <Pause size={12} fill="currentColor" />
+            <span>{isPaused ? 'RESUME' : 'PAUSE'}</span>
           </button>
 
           <button
-            className="ctrl-action-btn"
+            className="btn-console-action secondary"
             onClick={handleReset}
             disabled={isActionPending}
-            title="Reset simulation"
+            title="Reset fleet & tasks"
           >
-            <RotateCcw size={13} />
-            <span>Reset</span>
+            <RotateCcw size={12} />
+            <span>RESET</span>
           </button>
 
           <button
-            className="ctrl-action-btn hazard"
+            className="btn-console-action hazard"
             onClick={handleInjectObstacle}
             disabled={isActionPending}
-            title="Inject dynamic obstacle at (11, 13)"
+            title="Inject dynamic blockage at corridor (11, 13)"
           >
-            <AlertOctagon size={13} />
-            <span>Obstacle (11, 13)</span>
+            <AlertOctagon size={12} />
+            <span>INJECT OBSTACLE (11, 13)</span>
           </button>
 
-          {/* Speed Selector */}
-          <div className="speed-pills-bar">
+          {/* Precision Clock Multipliers */}
+          <div className="console-speed-dial">
+            <span className="speed-dial-label">SPEED:</span>
             {SPEEDS.map((spd) => (
               <button
                 key={spd}
@@ -163,19 +164,24 @@ export default function ScenarioControls() {
         </div>
       </div>
 
-      {/* Scenario Demo Grid */}
-      <div className="scenarios-grid">
+      {/* Scenario Benchmark Grid */}
+      <div className="console-scenarios-strip">
         {SCENARIOS.map((scen) => {
           const isSelected = activeDemo === scen.id;
           return (
             <button
               key={scen.id}
-              className={`scenario-card-btn ${isSelected && scen.id !== 'reset' ? 'selected' : ''}`}
+              className={`scenario-tactical-tab ${isSelected && scen.id !== 'reset' ? 'selected' : ''}`}
               onClick={() => handleSelectScenario(scen.id, scen.desc)}
               disabled={isActionPending}
             >
-              <div className="scen-card-title">{scen.name}</div>
-              <div className="scen-card-desc">{scen.desc}</div>
+              <div className="scen-tab-header">
+                <span className="scen-tab-id">{scen.name}</span>
+                {isSelected && scen.id !== 'reset' && (
+                  <span className="scen-active-indicator" />
+                )}
+              </div>
+              <div className="scen-tab-desc">{scen.desc}</div>
             </button>
           );
         })}

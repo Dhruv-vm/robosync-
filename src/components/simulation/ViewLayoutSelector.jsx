@@ -17,16 +17,20 @@ import {
   X,
   Radio,
   Server,
+  Activity,
+  Clock,
+  ShieldCheck,
+  AlertTriangle,
 } from 'lucide-react';
 
 const VIEW_OPTIONS = [
-  { id: ViewMode.COMMAND_HUB, label: 'Command Hub', icon: LayoutGrid },
-  { id: ViewMode.MAP_2D, label: '2D Map', icon: Map },
-  { id: ViewMode.FLEET_MATRIX, label: 'Fleet Telemetry', icon: Bot },
-  { id: ViewMode.TASKS_AUCTIONS, label: 'Task Auctions', icon: Layers },
-  { id: ViewMode.EVENT_STREAM, label: 'Event Logs', icon: Terminal },
-  { id: ViewMode.SCENARIO_CONTROLS, label: 'Scenarios', icon: Sliders },
-  { id: ViewMode.SPLIT_VIEW, label: 'Split View', icon: Columns },
+  { id: ViewMode.COMMAND_HUB, label: 'COMMAND', icon: LayoutGrid },
+  { id: ViewMode.MAP_2D, label: 'MAP 2D', icon: Map },
+  { id: ViewMode.FLEET_MATRIX, label: 'FLEET', icon: Bot },
+  { id: ViewMode.TASKS_AUCTIONS, label: 'TASKS', icon: Layers },
+  { id: ViewMode.EVENT_STREAM, label: 'LOGS', icon: Terminal },
+  { id: ViewMode.SCENARIO_CONTROLS, label: 'SCENARIOS', icon: Sliders },
+  { id: ViewMode.SPLIT_VIEW, label: 'SPLIT', icon: Columns },
 ];
 
 export default function ViewLayoutSelector() {
@@ -41,10 +45,14 @@ export default function ViewLayoutSelector() {
     apiUrl,
     updateApiUrl,
     resetApiUrl,
+    simulationData,
   } = useSimulation();
 
   const [showSettings, setShowSettings] = useState(false);
   const [customUrlInput, setCustomUrlInput] = useState(apiUrl);
+
+  const sys = simulationData?.system || {};
+  const isConnected = connectionStatus === ConnectionStatus.CONNECTED;
 
   // Sync input when apiUrl changes
   useEffect(() => {
@@ -205,89 +213,127 @@ export default function ViewLayoutSelector() {
 
   return (
     <>
-      <div className="view-selector-toolbar">
-        {/* Left: View Switching Tabs */}
-        <div className="view-mode-tabs">
-          {VIEW_OPTIONS.map((opt) => {
-            const Icon = opt.icon;
-            const isActive = activeView === opt.id;
-            return (
-              <button
-                key={opt.id}
-                className={`view-mode-tab-btn ${isActive ? 'active' : ''}`}
-                onClick={() => setActiveView(opt.id)}
-              >
-                <Icon size={14} />
-                <span>{opt.label}</span>
-              </button>
-            );
-          })}
+      <div className="ops-command-bar">
+        {/* Left: Brand Identity & Live Status */}
+        <div className="ops-bar-left">
+          <div className="ops-brand-badge">
+            <span className="ops-pulse-dot" />
+            <span className="ops-system-name">ROBOSYNC // OPERATIONS</span>
+          </div>
+
+          <div className="ops-telemetry-strip">
+            <div className="ops-stat-item">
+              <span className="ops-stat-k">TIME</span>
+              <span className="ops-stat-v mono">{sys.sim_time !== undefined ? `${sys.sim_time.toFixed(1)}s` : '0.0s'}</span>
+            </div>
+
+            <div className="ops-stat-divider" />
+
+            <div className="ops-stat-item">
+              <span className="ops-stat-k">FLEET</span>
+              <span className="ops-stat-v mono cyan">{sys.active_amrs || (isConnected ? 6 : 0)}/6 ACTIVE</span>
+            </div>
+
+            <div className="ops-stat-divider" />
+
+            <div className="ops-stat-item">
+              <span className="ops-stat-k">TASKS</span>
+              <span className="ops-stat-v mono">{sys.tasks_active !== undefined ? sys.tasks_active : 0} IN-FLIGHT</span>
+            </div>
+
+            <div className="ops-stat-divider" />
+
+            <div className="ops-stat-item">
+              <span className="ops-stat-k">SAFETY</span>
+              <span className="ops-stat-v mono green">0 PENETRATIONS</span>
+            </div>
+          </div>
         </div>
 
-        {/* Center: Split View Selectors if active */}
-        {activeView === ViewMode.SPLIT_VIEW && (
-          <div className="split-view-controls">
-            <div className="split-select-group">
-              <span className="split-label">Left:</span>
-              <select
-                className="split-select"
-                value={splitLeftView}
-                onChange={(e) => setSplitLeftView(e.target.value)}
-              >
-                <option value={ViewMode.MAP_2D}>2D Warehouse Map</option>
-                <option value={ViewMode.FLEET_MATRIX}>Fleet Telemetry</option>
-                <option value={ViewMode.TASKS_AUCTIONS}>Task Auctions</option>
-                <option value={ViewMode.EVENT_STREAM}>Event Logs</option>
-                <option value={ViewMode.SCENARIO_CONTROLS}>Scenario Controls</option>
-              </select>
-            </div>
-
-            <div className="split-select-group">
-              <span className="split-label">Right:</span>
-              <select
-                className="split-select"
-                value={splitRightView}
-                onChange={(e) => setSplitRightView(e.target.value)}
-              >
-                <option value={ViewMode.FLEET_MATRIX}>Fleet Telemetry</option>
-                <option value={ViewMode.MAP_2D}>2D Warehouse Map</option>
-                <option value={ViewMode.TASKS_AUCTIONS}>Task Auctions</option>
-                <option value={ViewMode.EVENT_STREAM}>Event Logs</option>
-                <option value={ViewMode.SCENARIO_CONTROLS}>Scenario Controls</option>
-              </select>
-            </div>
-          </div>
-        )}
-
-        {/* Right: Backend Connection Status & Host Config Button */}
-        <div className="connection-status-cluster">
-          <div
-            className={`conn-status-pill ${
-              connectionStatus === ConnectionStatus.CONNECTED
-                ? 'connected'
-                : connectionStatus === ConnectionStatus.CONNECTING
-                ? 'connecting'
-                : 'disconnected'
-            }`}
-            title={`Backend Host: ${apiUrl}`}
-          >
-            {connectionStatus === ConnectionStatus.CONNECTED ? (
-              <Wifi size={12} />
-            ) : (
-              <WifiOff size={12} />
-            )}
-            <span>{connectionStatus}</span>
+        {/* Center/Right: View Switching Workstation Toolbar */}
+        <div className="ops-bar-right">
+          <div className="view-mode-tabs">
+            {VIEW_OPTIONS.map((opt) => {
+              const Icon = opt.icon;
+              const isActive = activeView === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  className={`view-mode-tab-btn ${isActive ? 'active' : ''}`}
+                  onClick={() => setActiveView(opt.id)}
+                >
+                  <Icon size={13} />
+                  <span>{opt.label}</span>
+                </button>
+              );
+            })}
           </div>
 
-          <button
-            type="button"
-            className="btn-settings-toggle"
-            onClick={handleOpenSettings}
-            title="Configure Simulation Backend Host / IP"
-            aria-label="Open Connection Settings"
-          >
-            <Settings size={14} />
-          </button>
+          {/* Split View Selectors if active */}
+          {activeView === ViewMode.SPLIT_VIEW && (
+            <div className="split-view-controls">
+              <div className="split-select-group">
+                <span className="split-label">L:</span>
+                <select
+                  className="split-select"
+                  value={splitLeftView}
+                  onChange={(e) => setSplitLeftView(e.target.value)}
+                >
+                  <option value={ViewMode.MAP_2D}>2D MAP</option>
+                  <option value={ViewMode.FLEET_MATRIX}>FLEET</option>
+                  <option value={ViewMode.TASKS_AUCTIONS}>TASKS</option>
+                  <option value={ViewMode.EVENT_STREAM}>LOGS</option>
+                  <option value={ViewMode.SCENARIO_CONTROLS}>SCENARIOS</option>
+                </select>
+              </div>
+
+              <div className="split-select-group">
+                <span className="split-label">R:</span>
+                <select
+                  className="split-select"
+                  value={splitRightView}
+                  onChange={(e) => setSplitRightView(e.target.value)}
+                >
+                  <option value={ViewMode.FLEET_MATRIX}>FLEET</option>
+                  <option value={ViewMode.MAP_2D}>2D MAP</option>
+                  <option value={ViewMode.TASKS_AUCTIONS}>TASKS</option>
+                  <option value={ViewMode.EVENT_STREAM}>LOGS</option>
+                  <option value={ViewMode.SCENARIO_CONTROLS}>SCENARIOS</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Connection Status & Host Config Button */}
+          <div className="ops-conn-cluster">
+            <div
+              className={`conn-status-pill ${
+                connectionStatus === ConnectionStatus.CONNECTED
+                  ? 'connected'
+                  : connectionStatus === ConnectionStatus.CONNECTING
+                  ? 'connecting'
+                  : 'disconnected'
+              }`}
+              title={`Backend Host: ${apiUrl}`}
+            >
+              {connectionStatus === ConnectionStatus.CONNECTED ? (
+                <Wifi size={11} />
+              ) : (
+                <WifiOff size={11} />
+              )}
+              <span>{connectionStatus}</span>
+            </div>
+
+            <button
+              type="button"
+              className="btn-settings-toggle"
+              onClick={handleOpenSettings}
+              title="Configure Simulation Backend Host / IP"
+              aria-label="Open Connection Settings"
+            >
+              <Settings size={13} />
+            </button>
+          </div>
         </div>
       </div>
 
