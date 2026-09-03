@@ -259,7 +259,7 @@ body {
 }
 
 /* =========================================================
-   2. STICKY NAVBAR
+   2. STICKY FROSTED LIQUID GLASS NAVBAR
    ========================================================= */
 
 .site-navbar {
@@ -286,56 +286,124 @@ body {
 }
 
 .navbar-inner {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1.5rem;
-  background: var(--bg-glass);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid var(--border-medium);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  background: rgba(12, 16, 26, 0.52);
+  background-image: 
+    radial-gradient(120% 120% at 50% 0%, rgba(56, 189, 248, 0.06) 0%, rgba(15, 23, 42, 0.40) 50%, rgba(8, 12, 20, 0.60) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.01) 100%);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+  box-shadow: 
+    0 20px 50px -10px rgba(0, 0, 0, 0.65),
+    0 8px 24px -4px rgba(0, 0, 0, 0.45),
+    0 0 25px -4px rgba(56, 189, 248, 0.06),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.35);
+}
+
+/* Micro-reflection diagonal light sheen across the liquid glass */
+.navbar-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.03) 24%,
+    transparent 42%,
+    rgba(56, 189, 248, 0.03) 78%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+@supports not ((backdrop-filter: blur(24px)) or (-webkit-backdrop-filter: blur(24px))) {
+  .navbar-inner {
+    background: rgba(12, 16, 26, 0.94);
+  }
+}
+
+.navbar-left,
+.navbar-tabs,
+.navbar-right {
+  position: relative;
+  z-index: 2;
 }
 
 .navbar-left {
   display: flex;
   align-items: center;
   gap: 1rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.nav-brand-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.brand-logo-icon {
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.45));
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s ease;
+}
+
+.navbar-left:hover .brand-logo-icon {
+  transform: scale(1.06);
+  filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.65));
 }
 
 .nav-brand-title {
   font-weight: 800;
   font-size: 1.05rem;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   color: #ffffff;
   text-transform: uppercase;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
 
 .nav-status-pill {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.2rem 0.55rem;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 0.22rem 0.65rem;
+  background: rgba(16, 185, 129, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-top: 1px solid rgba(16, 185, 129, 0.35);
   border-radius: 9999px;
   font-family: var(--font-mono);
   font-size: 0.65rem;
   font-weight: 700;
   color: var(--green-online);
   letter-spacing: 0.08em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .nav-status-pill.connecting {
-  background: rgba(245, 158, 11, 0.1);
-  border-color: rgba(245, 158, 11, 0.25);
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.22);
+  border-top-color: rgba(245, 158, 11, 0.35);
   color: var(--amber-warning);
 }
 
 .nav-status-pill.offline {
-  background: rgba(100, 116, 139, 0.1);
-  border-color: rgba(100, 116, 139, 0.25);
+  background: rgba(100, 116, 139, 0.08);
+  border-color: rgba(100, 116, 139, 0.22);
+  border-top-color: rgba(100, 116, 139, 0.35);
   color: var(--text-muted);
 }
 
@@ -353,40 +421,52 @@ body {
 .navbar-tabs {
   display: flex;
   align-items: center;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  background: rgba(6, 9, 16, 0.48);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+  border-radius: 9px;
   padding: 3px;
   gap: 4px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .nav-tab-btn {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.45rem 1.1rem;
-  border: none;
+  padding: 0.45rem 1.15rem;
+  border: 1px solid transparent;
   background: transparent;
-  color: var(--text-secondary);
+  color: rgba(148, 163, 184, 0.85);
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nav-tab-btn:hover {
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(56, 189, 248, 0.22);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .nav-tab-btn.active {
   color: #ffffff;
-  background: rgba(56, 189, 248, 0.16);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.22) 0%, rgba(14, 116, 144, 0.12) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 
+    0 2px 10px rgba(56, 189, 248, 0.20),
+    0 0 16px rgba(56, 189, 248, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.30);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 .navbar-right {
@@ -401,16 +481,24 @@ body {
   gap: 0.45rem;
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.03);
-  padding: 0.35rem 0.75rem;
-  border: 1px solid var(--border-subtle);
-  border-radius: 6px;
+  color: rgba(148, 163, 184, 0.9);
+  background: rgba(8, 12, 20, 0.52);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 0.38rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
 .telemetry-counter-val {
   color: var(--accent-cyan);
   font-weight: 700;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
 }
 
 /* =========================================================
