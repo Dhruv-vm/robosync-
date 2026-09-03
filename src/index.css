@@ -1582,6 +1582,74 @@ body {
   color: #ffffff;
 }
 
+.btn-tactical-tool.active-maximize {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: var(--accent-cyan);
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
+}
+
+/* MAXIMIZED 2D MAP FULLSCREEN VIEWER */
+.ops-map-stage-card.is-maximized {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  z-index: 99999;
+  background: #05080f;
+  border: none;
+  border-radius: 0;
+  box-shadow: 0 0 80px rgba(0, 0, 0, 0.95);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.85rem 1.25rem;
+  animation: mapMaximizeEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mapMaximizeEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.ops-map-stage-card.is-maximized .ops-map-header {
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ops-map-stage-card.is-maximized .ops-canvas-viewport {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: calc((100vh - 8.5rem) * (24 / 16));
+  aspect-ratio: 24 / 16;
+  margin: 0 auto;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(56, 189, 248, 0.06);
+}
+
+.ops-map-stage-card.is-maximized .ops-legend-bar {
+  margin: 0 auto;
+  padding-top: 0.35rem;
+}
+
+@media (max-width: 768px) {
+  .ops-map-stage-card.is-maximized {
+    padding: 0.65rem;
+  }
+  .ops-map-stage-card.is-maximized .ops-canvas-viewport {
+    max-width: 100%;
+    aspect-ratio: 24 / 16;
+  }
+}
+
 /* Canvas Viewport & Tactical Corners */
 .ops-canvas-viewport {
   position: relative;

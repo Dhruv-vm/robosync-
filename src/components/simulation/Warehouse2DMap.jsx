@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useSimulation } from '../../context/SimulationContext';
-import { AlertCircle, Plus, Check, X, Trash2, Crosshair, Box, Target, Layers, ShieldAlert, Cpu } from 'lucide-react';
+import { AlertCircle, Plus, Check, X, Trash2, Crosshair, Box, Target, Layers, ShieldAlert, Cpu, Maximize2, Minimize2 } from 'lucide-react';
 
 const AMR_THEME = {
   'AMR-1': { color: '#38bdf8', fill: 'rgba(56, 189, 248, 0.22)', border: '#38bdf8' },
@@ -31,6 +31,7 @@ export default function Warehouse2DMap({ onSelectAmr }) {
   const containerRef = useRef(null);
 
   // Interactive Modes
+  const [isMaximized, setIsMaximized] = useState(false);
   const [taskCreationMode, setTaskCreationMode] = useState(false);
   const [obstacleEditMode, setObstacleEditMode] = useState(false);
   const [taskStep, setTaskStep] = useState('PICKUP'); // 'PICKUP' | 'DROPOFF'
@@ -563,7 +564,41 @@ export default function Warehouse2DMap({ onSelectAmr }) {
 
   useEffect(() => {
     drawMap();
+  }, [drawMap, isMaximized]);
+
+  // Observe container resizing during maximize/fullscreen/window adjustments
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const observer = new ResizeObserver(() => {
+      drawMap();
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
   }, [drawMap]);
+
+  // Handle Escape key to gracefully exit maximize
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isMaximized) {
+        setIsMaximized(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMaximized]);
+
+  // Prevent background body scroll when map is maximized
+  useEffect(() => {
+    if (isMaximized) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMaximized]);
 
   // Handle Canvas Mouse Interaction
   const handleMouseMove = (e) => {
@@ -642,7 +677,7 @@ export default function Warehouse2DMap({ onSelectAmr }) {
   };
 
   return (
-    <div className="ops-map-stage-card">
+    <div className={`ops-map-stage-card ${isMaximized ? 'is-maximized' : ''}`}>
       {/* Map Tactical Top Bar */}
       <div className="ops-map-header">
         <div className="ops-map-title-group">
@@ -651,6 +686,15 @@ export default function Warehouse2DMap({ onSelectAmr }) {
         </div>
 
         <div className="ops-map-tools-strip">
+          <button
+            className={`btn-tactical-tool ${isMaximized ? 'active-maximize' : ''}`}
+            onClick={() => setIsMaximized((prev) => !prev)}
+            title={isMaximized ? 'Exit Maximize View (Esc)' : 'Maximize 2D Map View'}
+          >
+            {isMaximized ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+            <span>{isMaximized ? 'EXIT MAXIMIZE' : 'MAXIMIZE'}</span>
+          </button>
+
           <button
             className={`btn-tactical-tool ${obstacleEditMode ? 'active-hazard' : ''}`}
             onClick={toggleObstacleEditMode}
