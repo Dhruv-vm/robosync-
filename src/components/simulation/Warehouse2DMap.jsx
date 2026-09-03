@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useSimulation } from '../../context/SimulationContext';
 import { AlertCircle, Plus, Check, X, Trash2, Crosshair, Box, Target, Layers, ShieldAlert, Cpu, Maximize2, Minimize2 } from 'lucide-react';
 
@@ -495,6 +496,53 @@ export default function Warehouse2DMap({ onSelectAmr }) {
       }
     });
 
+    // 11.5. Real-Time P2P Mesh Communication Links (Subtle animated dashed links)
+    const fleet = simulationData?.fleet || [];
+    const drawnPairs = new Set();
+
+    fleet.forEach((amrA) => {
+      const peers = amrA.connected_peers || [];
+      const posA = amrA.grid_pos;
+      if (!posA) return;
+
+      const cxA = (posA[0] + 0.5) * cellW;
+      const cyA = (gridH - 1 - posA[1] + 0.5) * cellH;
+
+      peers.forEach((peerId) => {
+        const pairKey = [amrA.robot_id, peerId].sort().join('<->');
+        if (drawnPairs.has(pairKey)) return;
+        drawnPairs.add(pairKey);
+
+        const amrB = fleet.find((a) => a.robot_id === peerId);
+        if (!amrB || !amrB.grid_pos) return;
+
+        const posB = amrB.grid_pos;
+        const cxB = (posB[0] + 0.5) * cellW;
+        const cyB = (gridH - 1 - posB[1] + 0.5) * cellH;
+
+        const isRelatedToSelected = selectedAmrId === amrA.robot_id || selectedAmrId === peerId;
+
+        // Subtle P2P mesh line (clearly distinct from navigation paths)
+        ctx.strokeStyle = isRelatedToSelected ? 'rgba(56, 189, 248, 0.7)' : 'rgba(56, 189, 248, 0.22)';
+        ctx.lineWidth = isRelatedToSelected ? 1.4 : 0.85;
+        ctx.setLineDash([2, 4]);
+
+        ctx.beginPath();
+        ctx.moveTo(cxA, cyA);
+        ctx.lineTo(cxB, cyB);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Small communication node pulse at midpoint
+        const midX = (cxA + cxB) / 2;
+        const midY = (cyA + cyB) / 2;
+        ctx.fillStyle = isRelatedToSelected ? 'rgba(56, 189, 248, 0.8)' : 'rgba(56, 189, 248, 0.3)';
+        ctx.beginPath();
+        ctx.arc(midX, midY, isRelatedToSelected ? 2.0 : 1.4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    });
+
     // 12. AMR Agents (Tactical Dual-Ring Chassis & Directional Needle)
     (simulationData?.fleet || []).forEach((amr) => {
       const theme = AMR_THEME[amr.robot_id] || { color: '#38bdf8' };
@@ -676,7 +724,7 @@ export default function Warehouse2DMap({ onSelectAmr }) {
     }
   };
 
-  return (
+  const mapContent = (
     <div className={`ops-map-stage-card ${isMaximized ? 'is-maximized' : ''}`}>
       {/* Map Tactical Top Bar */}
       <div className="ops-map-header">
@@ -809,8 +857,15 @@ export default function Warehouse2DMap({ onSelectAmr }) {
         <div className="ops-legend-item"><div className="legend-chip obstacle">B</div> DYNAMIC OBSTACLE (B)</div>
         <div className="ops-legend-item"><div className="legend-chip route" /> A* TRAJECTORY</div>
         <div className="ops-legend-item"><div className="legend-chip replan" /> DETOUR TRAIL</div>
+        <div className="ops-legend-item"><div className="legend-chip p2p-link" /> P2P LINK // LIVE</div>
         <div className="ops-legend-item"><div className="legend-chip target">TD</div> TARGET DESTINATION</div>
       </div>
     </div>
   );
+
+  if (isMaximized && typeof document !== 'undefined') {
+    return createPortal(mapContent, document.body);
+  }
+
+  return mapContent;
 }

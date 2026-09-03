@@ -426,7 +426,7 @@ body {
 }
 
 .tab-transition-wrapper {
-  animation: fadeInView 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeInView 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes fadeInView {
@@ -436,7 +436,7 @@ body {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
@@ -1737,6 +1737,7 @@ body {
 .legend-chip.obstacle { background: rgba(239, 68, 68, 0.3); border: 1px solid #ef4444; color: #ef4444; font-size: 7px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
 .legend-chip.route { background: #38bdf8; }
 .legend-chip.replan { background: transparent; border: 1px dashed #ef4444; }
+.legend-chip.p2p-link { background: transparent; border: 1px dashed #38bdf8; }
 .legend-chip.target { background: rgba(192, 132, 252, 0.3); border: 1px solid #c084fc; color: #c084fc; font-size: 7px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
 
 /* Substrips for Task & Obstacle Modes */
@@ -2663,6 +2664,116 @@ body {
 .drawer-val.cyan { color: var(--accent-cyan); }
 .drawer-val.purple { color: #c084fc; }
 .drawer-val.yellow { color: var(--amber-warning); }
+
+.drawer-conflict-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 4px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.72rem;
+}
+
+.drawer-conflict-banner .conflict-tag {
+  color: #f87171;
+  font-weight: 700;
+}
+
+.drawer-conflict-banner .conflict-cell {
+  color: var(--text-muted);
+  margin-left: auto;
+  font-size: 0.68rem;
+}
+
+.drawer-p2p-peers-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+}
+
+.drawer-p2p-peers-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.drawer-p2p-peers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.drawer-p2p-peer-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.drawer-p2p-peer-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.drawer-p2p-peer-card.is-conflict {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.peer-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.peer-id-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.peer-beacon-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.peer-name {
+  font-weight: 800;
+  font-size: 0.76rem;
+}
+
+.peer-status-pill {
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.peer-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.peer-mission {
+  color: #c084fc;
+  font-weight: 600;
+}
+
+.peer-batt {
+  color: #10b981;
+}
 
 /* --- 11. FULLSCREEN & SPLIT WORKSPACES --- */
 .ops-fullscreen-wrapper {

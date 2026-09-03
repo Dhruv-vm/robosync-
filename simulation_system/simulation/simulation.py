@@ -86,6 +86,10 @@ class FleetSimulation:
             )
             self.amrs.append(agent)
 
+        # Initial mesh discovery sync (all agents registered)
+        for agent in self.amrs:
+            agent._broadcast_state(force=True)
+
         self.dashboard = FleetDashboard(
             self.amrs,
             self.task_manager,
@@ -449,6 +453,10 @@ class FleetSimulation:
                 amr.model.clear_path_line()
                 amr.model.clear_goal_marker()
                 amr.model.update_status_text(f"[{amr.robot_id}]", amr.model.color[:3])
+
+        # Mesh rediscovery sync across fleet
+        for amr in self.amrs:
+            amr._broadcast_state(force=True)
 
         if self.dashboard:
             self.dashboard.amrs = self.amrs

@@ -386,6 +386,19 @@ class AMRAgent:
             "last_replan": self.last_replan_event
         }
         
+        peers_dict = {}
+        for pid, peer in self.peer_states.items():
+            peers_dict[pid] = {
+                "robot_id": peer.robot_id,
+                "grid_pos": list(peer.grid_pos) if peer.grid_pos else None,
+                "world_pos": [round(peer.position[0], 2), round(peer.position[1], 2)] if peer.position else None,
+                "status": peer.status.value if hasattr(peer.status, "value") else str(peer.status),
+                "active_mission": peer.current_task_id or "IDLE",
+                "battery": round(peer.battery, 1) if peer.battery is not None else 100.0,
+                "priority": round(peer.priority_score, 1) if peer.priority_score is not None else 0.0,
+                "waiting_for": peer.waiting_for
+            }
+
         return {
             "robot_id": self.robot_id,
             "status": status_display,
@@ -413,7 +426,11 @@ class AMRAgent:
                 "dropoff_pos": list(self.current_task.dropoff_pos)
             } if self.current_task else None,
             "astar_metrics": astar_metrics,
-            "last_replan": self.last_replan_event
+            "last_replan": self.last_replan_event,
+            "connected_peers": sorted(list(self.peer_states.keys())),
+            "peer_states": peers_dict,
+            "conflicting_peer": self.conflict_mgr.active_conflicting_peer or self.yield_priority_peer,
+            "conflict_cell": list(self.conflict_mgr.active_conflict_cell) if self.conflict_mgr.active_conflict_cell else None
         }
 
     def set_path(self, path: List[Tuple[int, int]]):
