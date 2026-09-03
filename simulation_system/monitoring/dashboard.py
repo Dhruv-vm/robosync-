@@ -5,6 +5,7 @@ Provides real-time observation, system metrics, robot status panels, and event l
 from typing import List, Dict, Optional, Tuple, Any
 import time
 import os
+import threading
 from colorama import Fore, Style, Back
 
 from tasks.task_manager import TaskManager
@@ -65,6 +66,9 @@ class FleetDashboard:
         
         # Subscribe to logger events
         FleetLogger.register_listener(self._on_log_event)
+        
+        # Thread-safe snapshot lock for concurrent multi-client HTTP reads
+        self._snapshot_lock = threading.RLock()
 
     def _on_log_event(self, event: Dict[str, Any]):
         """Capture and parse events to update live demonstration alerts."""
@@ -99,122 +103,123 @@ class FleetDashboard:
 
     def get_full_state_snapshot(self) -> Dict[str, Any]:
         """Aggregate complete real simulation state for external dashboards/APIs."""
-        amr_telemetry = []
-        for amr in self.amrs:
-            if hasattr(amr, "get_telemetry_dict"):
-                amr_telemetry.append(amr.get_telemetry_dict())
-            else:
-                task_id = amr.current_task.task_id if getattr(amr, "current_task", None) else "IDLE"
-                amr_telemetry.append({
-                    "robot_id": getattr(amr, "robot_id", "AMR"),
-                    "status": getattr(amr, "status", "IDLE"),
-                    "battery": getattr(amr, "battery", 100.0),
-                    "task_id": task_id,
-                    "grid_pos": getattr(amr, "grid_pos", (0, 0)),
-                    "world_pos": getattr(amr, "world_pos", (0.0, 0.0, 0.0)),
-                    "target_goal": getattr(amr, "target_goal", None),
-                    "goal_desc": str(getattr(amr, "target_goal", "-")),
-                    "planning_status": "Active" if getattr(amr, "current_path", []) else "Idle",
-                    "path_length": len(getattr(amr, "current_path", [])),
-                    "completed_tasks": getattr(amr, "completed_tasks_count", 0),
-                    "total_distance": getattr(amr, "total_distance", 0.0)
-                })
+        with self._snapshot_lock:
+            amr_telemetry = []
+            for amr in self.amrs:
+                if hasattr(amr, "get_telemetry_dict"):
+                    amr_telemetry.append(amr.get_telemetry_dict())
+                else:
+                    task_id = amr.current_task.task_id if getattr(amr, "current_task", None) else "IDLE"
+                    amr_telemetry.append({
+                        "robot_id": getattr(amr, "robot_id", "AMR"),
+                        "status": getattr(amr, "status", "IDLE"),
+                        "battery": getattr(amr, "battery", 100.0),
+                        "task_id": task_id,
+                        "grid_pos": getattr(amr, "grid_pos", (0, 0)),
+                        "world_pos": getattr(amr, "world_pos", (0.0, 0.0, 0.0)),
+                        "target_goal": getattr(amr, "target_goal", None),
+                        "goal_desc": str(getattr(amr, "target_goal", "-")),
+                        "planning_status": "Active" if getattr(amr, "current_path", []) else "Idle",
+                        "path_length": len(getattr(amr, "current_path", [])),
+                        "completed_tasks": getattr(amr, "completed_tasks_count", 0),
+                        "total_distance": getattr(amr, "total_distance", 0.0)
+                    })
 
-        dynamic_obstacles = []
-        if self.grid_map and hasattr(self.grid_map, "dynamic_obstacles"):
-            dynamic_obstacles = [list(obs) for obs in self.grid_map.dynamic_obstacles]
+            dynamic_obstacles = []
+            if self.grid_map and hasattr(self.grid_map, "dynamic_obstacles"):
+                dynamic_obstacles = [list(obs) for obs in self.grid_map.dynamic_obstacles]
 
-        tasks_list = []
-        if self.task_mgr and hasattr(self.task_mgr, "tasks"):
-            for tid, t in self.task_mgr.tasks.items():
-                tasks_list.append({
-                    "task_id": t.task_id,
-                    "pickup_zone": t.pickup_zone,
-                    "pickup_pos": list(t.pickup_pos),
-                    "dropoff_zone": t.dropoff_zone,
-                    "dropoff_pos": list(t.dropoff_pos),
-                    "priority": t.priority,
-                    "status": t.status.value,
-                    "assigned_to": t.assigned_to,
-                    "created_at": round(t.created_at, 2) if t.created_at else None,
-                    "duration": round(t.duration, 2) if t.duration else None
-                })
+            tasks_list = []
+            if self.task_mgr and hasattr(self.task_mgr, "tasks"):
+                for tid, t in self.task_mgr.tasks.items():
+                    tasks_list.append({
+                        "task_id": t.task_id,
+                        "pickup_zone": t.pickup_zone,
+                        "pickup_pos": list(t.pickup_pos),
+                        "dropoff_zone": t.dropoff_zone,
+                        "dropoff_pos": list(t.dropoff_pos),
+                        "priority": t.priority,
+                        "status": t.status.value,
+                        "assigned_to": t.assigned_to,
+                        "created_at": round(t.created_at, 2) if t.created_at else None,
+                        "duration": round(t.duration, 2) if t.duration else None
+                    })
 
-        unassigned_tasks = len(self.task_mgr.get_unassigned_tasks()) if self.task_mgr else 0
-        tot_dist = sum(self.metrics.distance_travelled.values()) if (self.metrics and self.metrics.distance_travelled) else 0.0
+            unassigned_tasks = len(self.task_mgr.get_unassigned_tasks()) if self.task_mgr else 0
+            tot_dist = sum(self.metrics.distance_travelled.values()) if (self.metrics and self.metrics.distance_travelled) else 0.0
 
-        # Pre-calculated warehouse geometry for frontend canvas renderer
-        layout = {
-            "grid_width": 24,
-            "grid_height": 16,
-            "shelf_blocks": [
-                [5, 10, 3, 4],
-                [5, 10, 8, 9],
-                [5, 10, 11, 12],
-                [14, 19, 3, 4],
-                [14, 19, 8, 9],
-                [14, 19, 11, 12]
-            ],
-            "pickup_zones": {
-                "P1": [3, 14],
-                "P2": [8, 14],
-                "P3": [15, 14],
-                "P4": [20, 14]
-            },
-            "dropoff_zones": {
-                "D1": [3, 1],
-                "D2": [8, 1],
-                "D3": [15, 1],
-                "D4": [20, 1]
-            },
-            "charging_docks": {
-                "AMR-1": [1, 2],
-                "AMR-2": [22, 2],
-                "AMR-3": [1, 13],
-                "AMR-4": [22, 13],
-                "AMR-5": [1, 7],
-                "AMR-6": [22, 7]
-            },
-            "intersections": [
-                [12, 6],
-                [12, 10],
-                [12, 2],
-                [3, 6],
-                [20, 6]
-            ]
-        }
+            # Pre-calculated warehouse geometry for frontend canvas renderer
+            layout = {
+                "grid_width": 24,
+                "grid_height": 16,
+                "shelf_blocks": [
+                    [5, 10, 3, 4],
+                    [5, 10, 8, 9],
+                    [5, 10, 11, 12],
+                    [14, 19, 3, 4],
+                    [14, 19, 8, 9],
+                    [14, 19, 11, 12]
+                ],
+                "pickup_zones": {
+                    "P1": [3, 14],
+                    "P2": [8, 14],
+                    "P3": [15, 14],
+                    "P4": [20, 14]
+                },
+                "dropoff_zones": {
+                    "D1": [3, 1],
+                    "D2": [8, 1],
+                    "D3": [15, 1],
+                    "D4": [20, 1]
+                },
+                "charging_docks": {
+                    "AMR-1": [1, 2],
+                    "AMR-2": [22, 2],
+                    "AMR-3": [1, 13],
+                    "AMR-4": [22, 13],
+                    "AMR-5": [1, 7],
+                    "AMR-6": [22, 7]
+                },
+                "intersections": [
+                    [12, 6],
+                    [12, 10],
+                    [12, 2],
+                    [3, 6],
+                    [20, 6]
+                ]
+            }
 
-        return {
-            "system": {
-                "scenario": self.scenario_name.upper(),
-                "sim_time": round(self.sim_time, 2),
-                "sim_speed": self.sim_speed,
-                "is_running": self.is_running,
-                "is_paused": getattr(self, "is_paused", False),
-                "active_amrs": len(self.amrs),
-                "active_planners": sum(1 for a in self.amrs if getattr(a, "status", None) not in ("FAILED",)),
-                "tasks_completed": self.metrics.tasks_completed if self.metrics else 0,
-                "tasks_pending": unassigned_tasks,
-                "tasks_active": len(tasks_list) - (self.metrics.tasks_completed if self.metrics else 0) - unassigned_tasks,
-                "autonomous_replans": self.metrics.replan_count if self.metrics else 0,
-                "conflicts_resolved": self.metrics.conflicts_resolved if self.metrics else 0,
-                "deadlocks_resolved": self.metrics.deadlocks_resolved if self.metrics else 0,
-                "deadlocks_detected": self.metrics.deadlocks_detected if self.metrics else 0,
-                "collision_count": self.metrics.collision_count if self.metrics else 0,
-                "total_distance": round(tot_dist, 1)
-            },
-            "fleet": amr_telemetry,
-            "tasks": tasks_list,
-            "layout": layout,
-            "blocked_alert": {
-                "active": self.blocked_alert.active,
-                "obstacle_pos": list(self.blocked_alert.obstacle_pos) if self.blocked_alert.obstacle_pos else None,
-                "affected_amr": self.blocked_alert.affected_amr_id,
-                "stage": self.blocked_alert.stage
-            },
-            "dynamic_obstacles": dynamic_obstacles,
-            "recent_events": FleetLogger.get_recent_events(limit=25)
-        }
+            return {
+                "system": {
+                    "scenario": self.scenario_name.upper(),
+                    "sim_time": round(self.sim_time, 2),
+                    "sim_speed": self.sim_speed,
+                    "is_running": self.is_running,
+                    "is_paused": getattr(self, "is_paused", False),
+                    "active_amrs": len(self.amrs),
+                    "active_planners": sum(1 for a in self.amrs if getattr(a, "status", None) not in ("FAILED",)),
+                    "tasks_completed": self.metrics.tasks_completed if self.metrics else 0,
+                    "tasks_pending": unassigned_tasks,
+                    "tasks_active": len(tasks_list) - (self.metrics.tasks_completed if self.metrics else 0) - unassigned_tasks,
+                    "autonomous_replans": self.metrics.replan_count if self.metrics else 0,
+                    "conflicts_resolved": self.metrics.conflicts_resolved if self.metrics else 0,
+                    "deadlocks_resolved": self.metrics.deadlocks_resolved if self.metrics else 0,
+                    "deadlocks_detected": self.metrics.deadlocks_detected if self.metrics else 0,
+                    "collision_count": self.metrics.collision_count if self.metrics else 0,
+                    "total_distance": round(tot_dist, 1)
+                },
+                "fleet": amr_telemetry,
+                "tasks": tasks_list,
+                "layout": layout,
+                "blocked_alert": {
+                    "active": self.blocked_alert.active,
+                    "obstacle_pos": list(self.blocked_alert.obstacle_pos) if self.blocked_alert.obstacle_pos else None,
+                    "affected_amr": self.blocked_alert.affected_amr_id,
+                    "stage": self.blocked_alert.stage
+                },
+                "dynamic_obstacles": dynamic_obstacles,
+                "recent_events": FleetLogger.get_recent_events(limit=25)
+            }
 
     def render_terminal_dashboard(self, force: bool = False):
         """Minimal clean runtime log (replaces legacy multi-line ASCII terminal dashboard)."""

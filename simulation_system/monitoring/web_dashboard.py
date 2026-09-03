@@ -2214,33 +2214,36 @@ class WebDashboardHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
 
+class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    """Multi-threaded TCP server enabling concurrent non-blocking HTTP telemetry requests."""
+    daemon_threads = True
+    allow_reuse_address = True
+
+
 class WebDashboardServer:
     def __init__(self, dashboard, sim_instance=None, port: int = 8080):
         self.dashboard = dashboard
         self.sim_instance = sim_instance
         self.port = port
-        self.httpd: Optional[socketserver.TCPServer] = None
+        self.httpd: Optional[ThreadedTCPServer] = None
         self.thread: Optional[threading.Thread] = None
 
-    def start(self):
+    def start(self) -> bool:
         try:
             handler = WebDashboardHandler
             handler.dashboard_instance = self.dashboard
             handler.sim_instance = self.sim_instance
-            socketserver.TCPServer.allow_reuse_address = True
-            self.httpd = socketserver.TCPServer(("", self.port), handler)
+            self.httpd = ThreadedTCPServer(("", self.port), handler)
             self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
             self.thread.start()
             return True
-        except Exception:
-            try:
-                self.port = 8081
-                self.httpd = socketserver.TCPServer(("", self.port), handler)
-                self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
-                self.thread.start()
-                return True
-            except Exception:
-                return False
+        except OSError as e:
+            print(f"\n[ERROR] Web Dashboard failed to bind to port {self.port}: {e}")
+            print(f"[ERROR] Another process is using port {self.port}. Terminate it or specify a different port.\n")
+            return False
+        except Exception as e:
+            print(f"\n[ERROR] Web Dashboard server startup exception: {e}\n")
+            return False
 
     def stop(self):
         if self.httpd:

@@ -44,6 +44,8 @@ export function SimulationProvider({ children }) {
 
   const isPollingRef = useRef(false);
   const consecutiveErrorsRef = useRef(0);
+  const lastCompletedSeqRef = useRef(0);
+  const currentReqSeqRef = useRef(0);
 
   // Change view and persist locally for this display/browser session
   const setView = useCallback((view) => {
@@ -72,25 +74,31 @@ export function SimulationProvider({ children }) {
     consecutiveErrorsRef.current = 0;
   }, []);
 
-  // Fetch state tick
+  // Fetch state tick with monotonically increasing sequence guarding
   const pollState = useCallback(async () => {
     if (isPollingRef.current) return;
     isPollingRef.current = true;
+    const reqSeq = ++currentReqSeqRef.current;
 
     try {
       const data = await simulationApi.getState(2000);
-      setSimulationData(data);
-      setLastUpdated(Date.now());
-      setConnectionStatus(ConnectionStatus.CONNECTED);
-      setErrorMessage(null);
-      consecutiveErrorsRef.current = 0;
+      if (reqSeq >= lastCompletedSeqRef.current) {
+        lastCompletedSeqRef.current = reqSeq;
+        setSimulationData(data);
+        setLastUpdated(Date.now());
+        setConnectionStatus(ConnectionStatus.CONNECTED);
+        setErrorMessage(null);
+        consecutiveErrorsRef.current = 0;
+      }
     } catch (err) {
-      consecutiveErrorsRef.current += 1;
-      if (consecutiveErrorsRef.current >= 2) {
-        setConnectionStatus(
-          err.name === 'AbortError' ? ConnectionStatus.ERROR : ConnectionStatus.DISCONNECTED
-        );
-        setErrorMessage(err.message || 'Connection to simulation host failed');
+      if (reqSeq >= lastCompletedSeqRef.current) {
+        consecutiveErrorsRef.current += 1;
+        if (consecutiveErrorsRef.current >= 2) {
+          setConnectionStatus(
+            err.name === 'AbortError' ? ConnectionStatus.ERROR : ConnectionStatus.DISCONNECTED
+          );
+          setErrorMessage(err.message || 'Connection to simulation host failed');
+        }
       }
     } finally {
       isPollingRef.current = false;

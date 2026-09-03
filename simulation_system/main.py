@@ -102,7 +102,7 @@ def main():
     
     scenario = scenario_map[args.scenario]
     gui = not args.headless
-    web_enabled = args.web_dashboard and gui
+    web_enabled = args.web_dashboard
     
     FleetLogger.banner("STERLEBOM / ROBOSYNC: DECENTRALIZED AMR FLEET COORDINATION")
     FleetLogger.info("System", f"Selected Scenario: {scenario.value.upper()}")

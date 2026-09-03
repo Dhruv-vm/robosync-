@@ -5,7 +5,19 @@
  */
 
 const STORAGE_KEY = 'robosync_simulation_api_url';
-const DEFAULT_URL = import.meta.env.VITE_SIMULATION_API_URL || 'http://localhost:8080';
+
+export const getDefaultHostUrl = () => {
+  if (import.meta.env.VITE_SIMULATION_API_URL) {
+    return import.meta.env.VITE_SIMULATION_API_URL.replace(/\/+$/, '');
+  }
+  // In browser context: dynamically resolve to the host IP serving the frontend
+  if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+    const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+    const host = window.location.hostname;
+    return `${protocol}//${host}:8080`;
+  }
+  return 'http://localhost:8080';
+};
 
 class SimulationApiService {
   constructor() {
@@ -21,7 +33,7 @@ class SimulationApiService {
     } catch {
       // LocalStorage fallback for non-browser/restricted environments
     }
-    return DEFAULT_URL.replace(/\/+$/, '');
+    return getDefaultHostUrl();
   }
 
   getApiUrl() {
@@ -40,7 +52,7 @@ class SimulationApiService {
   }
 
   resetApiUrl() {
-    this.apiUrl = DEFAULT_URL.replace(/\/+$/, '');
+    this.apiUrl = getDefaultHostUrl();
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {
