@@ -6,7 +6,15 @@ from typing import List, Dict, Optional, Tuple, Any
 import time
 import os
 import threading
-from colorama import Fore, Style, Back
+try:
+    from colorama import Fore, Style, Back
+except ImportError:
+    class _DummyColor:
+        def __getattr__(self, name):
+            return ""
+    Fore = _DummyColor()
+    Style = _DummyColor()
+    Back = _DummyColor()
 
 from tasks.task_manager import TaskManager
 from utils.metrics import FleetMetrics

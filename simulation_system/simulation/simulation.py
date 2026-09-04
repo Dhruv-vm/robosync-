@@ -3,7 +3,7 @@ Main simulation engine coordinating PyBullet physics, scenarios, and agent updat
 """
 import time
 import math
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 import pybullet as p
 
 from config.config import SIM, GRID, AMR
@@ -11,6 +11,7 @@ from warehouse.grid import GridMap, CellType
 from warehouse.warehouse import Warehouse
 from warehouse.scenarios import ScenarioType, ScenarioConfig
 from robots.robot_model import RobotModel
+from robots.robot_state import RobotStatus
 from robots.amr_agent import AMRAgent
 from coordination.p2p import P2PNetwork, MessageType
 from tasks.task_manager import TaskManager
@@ -173,6 +174,15 @@ class FleetSimulation:
                     self.run_task_auction_round()
                     break
 
+        elif self.scenario_type == ScenarioType.BLOCKED:
+            # Dynamically inject obstacle directly into active route of moving AMR
+            if self.sim_time >= 1.5:
+                block_cell = self.find_active_route_cell_to_block()
+                if block_cell:
+                    FleetLogger.banner(f"EVENT: DYNAMIC AISLE BLOCKAGE INJECTED AT {block_cell}")
+                    self.inject_dynamic_obstacle(block_cell[0], block_cell[1])
+                    self.scenario_event_triggered = True
+
     def post_command(self, action: str, params: Optional[dict] = None) -> bool:
         """Thread-safe command submission to queue. Executed exclusively on simulation thread."""
         with self.command_lock:
@@ -246,10 +256,33 @@ class FleetSimulation:
             except ValueError:
                 FleetLogger.warning("System", f"Unknown scenario requested: {scen_name}")
                 return False
-        elif action in ("inject_obstacle", "add_obstacle"):
-            cell = params.get("cell", [11, 13])
+        elif action in ("inject_obstacle", "add_obstacle", "block_aisle", "smart_block_aisle"):
+            cell = params.get("cell")
+            if not cell:
+                cell = self.find_active_route_cell_to_block()
             gx, gy = int(cell[0]), int(cell[1])
+            
+            # If all AMRs are idle and no tasks exist, automatically trigger demonstration mission through corridor
+            if not self.task_manager.tasks and all(getattr(a, "status", None) in (RobotStatus.IDLE, RobotStatus.WAITING) for a in self.amrs):
+                self.task_manager.create_task(
+                    task_id="TASK-BLK-DEMO",
+                    pickup_zone="P2",
+                    dropoff_zone="D3",
+                    priority=1.5
+                )
+                FleetLogger.highlight("Demo Setup", "Created demonstration mission TASK-BLK-DEMO (P2 -> D3) through central corridor.")
+                self.run_task_auction_round()
+                
             return self.inject_dynamic_obstacle(gx, gy)
+        elif action == "toggle_obstacle":
+            cell = params.get("cell")
+            if not cell:
+                cell = self.find_active_route_cell_to_block()
+            gx, gy = int(cell[0]), int(cell[1])
+            if (gx, gy) in self.grid_map.dynamic_obstacles:
+                return self.remove_dynamic_obstacle(gx, gy)
+            else:
+                return self.inject_dynamic_obstacle(gx, gy)
         elif action == "remove_obstacle":
             cell = params.get("cell")
             if not cell:
@@ -309,6 +342,56 @@ class FleetSimulation:
             FleetLogger.info("System", "Simulation STOPPED via Control Center.")
             return True
         return False
+
+    def find_active_route_cell_to_block(self) -> Tuple[int, int]:
+        """
+        Inspect active AMRs and select a prime traversable cell to block for live demo:
+        1. Selects a cell 2-3 steps ahead on an active moving AMR's path.
+        2. Validates that the cell is walkable, not a dock, and not currently occupied by the AMR.
+        3. Falls back to prime central corridor cells: (11, 13), (12, 6), (12, 10).
+        """
+        dock_positions = set(self.grid_map.charging_docks.values())
+        
+        # 1. Active moving AMRs with forward path
+        for amr in self.amrs:
+            if getattr(amr, "status", None) in (RobotStatus.MOVING_TO_PICKUP, RobotStatus.MOVING_TO_DROPOFF):
+                path = getattr(amr, "current_path", [])
+                if path and len(path) >= 2:
+                    lookahead_idx = min(2, len(path) - 1)
+                    candidate = path[lookahead_idx]
+                    if (candidate != amr.grid_pos and 
+                        self.grid_map.is_walkable(candidate[0], candidate[1], treat_dynamic_as_blocked=False) and
+                        candidate not in dock_positions and
+                        candidate not in self.grid_map.dynamic_obstacles):
+                        return candidate
+                elif path:
+                    candidate = path[0]
+                    if (candidate != amr.grid_pos and 
+                        self.grid_map.is_walkable(candidate[0], candidate[1], treat_dynamic_as_blocked=False) and
+                        candidate not in dock_positions and
+                        candidate not in self.grid_map.dynamic_obstacles):
+                        return candidate
+
+        # 2. AMRs with an assigned task planning to start
+        for amr in self.amrs:
+            if getattr(amr, "current_task", None) and getattr(amr, "target_goal", None):
+                path, _ = amr.planner.plan(amr.grid_pos, amr.target_goal)
+                if path and len(path) > 2:
+                    for candidate in path[1:]:
+                        if (candidate != amr.grid_pos and 
+                            self.grid_map.is_walkable(candidate[0], candidate[1], treat_dynamic_as_blocked=False) and
+                            candidate not in dock_positions and
+                            candidate not in self.grid_map.dynamic_obstacles):
+                            return candidate
+
+        # 3. Prime central corridor fallback cells
+        prime_corridor_cells = [(11, 13), (12, 6), (12, 10), (11, 8), (12, 3), (12, 2)]
+        for cell in prime_corridor_cells:
+            if (cell not in self.grid_map.dynamic_obstacles and 
+                all(getattr(amr, "grid_pos", None) != cell for amr in self.amrs)):
+                return cell
+
+        return (11, 13)
 
     def inject_dynamic_obstacle(self, gx: int, gy: int) -> bool:
         """Add dynamic obstacle at grid cell (gx, gy) with server-side validation."""

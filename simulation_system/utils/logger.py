@@ -2,9 +2,17 @@
 Colored and structured logging system for clear hackathon explainability.
 """
 import time
-from colorama import Fore, Style, init
-
-init(autoreset=True)
+try:
+    from colorama import Fore, Style, init
+    init(autoreset=True)
+except ImportError:
+    class _DummyColor:
+        def __getattr__(self, name):
+            return ""
+    Fore = _DummyColor()
+    Style = _DummyColor()
+    def init(*args, **kwargs):
+        pass
 
 class FleetLogger:
     ROBOT_COLORS = {

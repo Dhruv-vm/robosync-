@@ -2,8 +2,14 @@
 Performance metrics collector and reporter for decentralized fleet benchmarks.
 """
 import time
-from typing import Dict, List, Optional
-from colorama import Fore, Style
+try:
+    from colorama import Fore, Style
+except ImportError:
+    class _DummyColor:
+        def __getattr__(self, name):
+            return ""
+    Fore = _DummyColor()
+    Style = _DummyColor()
 
 class FleetMetrics:
     def __init__(self):

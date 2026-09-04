@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useSimulation } from '../../context/SimulationContext';
-import { AlertCircle, Plus, Check, X, Trash2, Crosshair, Box, Target, Layers, ShieldAlert, Cpu, Maximize2, Minimize2 } from 'lucide-react';
+import { AlertCircle, AlertOctagon, Plus, Check, X, Trash2, Crosshair, Box, Target, Layers, ShieldAlert, Cpu, Maximize2, Minimize2 } from 'lucide-react';
 
 const AMR_THEME = {
   'AMR-1': { color: '#38bdf8', fill: 'rgba(56, 189, 248, 0.22)', border: '#38bdf8' },
@@ -122,9 +122,11 @@ export default function Warehouse2DMap({ onSelectAmr }) {
   // Clear Obstacles
   const handleClearObstacles = async () => {
     try {
-      await sendControl('clear_obstacles');
+      console.log('[RoboSync] Clearing all dynamic obstacles via authoritative backend...');
+      const res = await sendControl('clear_obstacles');
+      console.log('[RoboSync] Clear obstacles response:', res);
     } catch (err) {
-      console.error('Failed to clear obstacles:', err);
+      console.error('[RoboSync] Failed to clear obstacles:', err);
     }
   };
 
@@ -423,22 +425,62 @@ export default function Warehouse2DMap({ onSelectAmr }) {
       }
     }
 
-    // 9. Dynamic Obstacles (Hazard Marked)
+    // 9. Dynamic Obstacles (Industrial Hazard Barrier with Diagonal Caution Stripes & BLOCKED Badge)
     (simulationData?.dynamic_obstacles || []).forEach((obs) => {
       const ox = obs[0] * cellW;
       const oy = (gridH - 1 - obs[1]) * cellH;
 
-      ctx.fillStyle = 'rgba(239, 68, 68, 0.28)';
+      // Base Dark Background
+      ctx.fillStyle = '#1c0a0a';
       ctx.fillRect(ox + 1, oy + 1, cellW - 2, cellH - 2);
+
+      // Diagonal Caution/Hazard Stripes (Angled 45 deg)
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(ox + 1, oy + 1, cellW - 2, cellH - 2);
+      ctx.clip();
+
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.55)';
+      ctx.lineWidth = Math.max(3, cellW * 0.16);
+      const stripeSpacing = Math.max(8, cellW * 0.35);
+      for (let sx = -cellH; sx < cellW + cellH; sx += stripeSpacing) {
+        ctx.beginPath();
+        ctx.moveTo(ox + sx, oy + cellH);
+        ctx.lineTo(ox + sx + cellH, oy);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // Outer Hazard Illuminated Perimeter
       ctx.strokeStyle = '#ef4444';
       ctx.lineWidth = 2;
       ctx.strokeRect(ox + 1, oy + 1, cellW - 2, cellH - 2);
 
-      ctx.fillStyle = '#ef4444';
-      ctx.font = 'bold 12px monospace';
+      // Corner Highlight Rivets
+      ctx.fillStyle = '#fca5a5';
+      const rSize = Math.max(2, Math.min(3, cellW * 0.1));
+      ctx.fillRect(ox + 1, oy + 1, rSize, rSize);
+      ctx.fillRect(ox + cellW - 1 - rSize, oy + 1, rSize, rSize);
+      ctx.fillRect(ox + 1, oy + cellH - 1 - rSize, rSize, rSize);
+      ctx.fillRect(ox + cellW - 1 - rSize, oy + cellH - 1 - rSize, rSize, rSize);
+
+      // Center High-Contrast Barrier Badge
+      const badgeW = cellW * 0.78;
+      const badgeH = cellH * 0.44;
+      const badgeX = ox + (cellW - badgeW) / 2;
+      const badgeY = oy + (cellH - badgeH) / 2;
+
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+      ctx.fillRect(badgeX, badgeY, badgeW, badgeH);
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(badgeX, badgeY, badgeW, badgeH);
+
+      ctx.fillStyle = '#fef2f2';
+      ctx.font = 'bold 9px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('B', ox + cellW / 2, oy + cellH / 2);
+      ctx.fillText('BLOCKED', ox + cellW / 2, oy + cellH / 2);
     });
 
     // 10. Re-routing Trails (Red Dotted Lines)
@@ -746,7 +788,7 @@ export default function Warehouse2DMap({ onSelectAmr }) {
           <button
             className={`btn-tactical-tool ${obstacleEditMode ? 'active-hazard' : ''}`}
             onClick={toggleObstacleEditMode}
-            title="Inject or remove obstacle blocks"
+            title="Toggle manual click-to-block on warehouse floor"
           >
             <AlertCircle size={12} />
             <span>{obstacleEditMode ? 'EXIT OBSTACLE EDITOR' : '+ / - BLOCK AISLE'}</span>
@@ -770,6 +812,16 @@ export default function Warehouse2DMap({ onSelectAmr }) {
           </button>
         </div>
       </div>
+
+      {/* Active Dynamic Obstacle Alert Badge */}
+      {simulationData?.dynamic_obstacles?.length > 0 && (
+        <div className="map-obstacle-active-badge">
+          <AlertOctagon size={13} className="text-red-400" />
+          <span>
+            HAZARD DETECTED: {simulationData.dynamic_obstacles.length} ACTIVE AISLE BLOCKAGE{simulationData.dynamic_obstacles.length > 1 ? 'S' : ''} — AUTONOMOUS LOCAL A* REROUTE ACTIVE
+          </span>
+        </div>
+      )}
 
       {/* Interactive Task Creation Panel */}
       {taskCreationMode && (
