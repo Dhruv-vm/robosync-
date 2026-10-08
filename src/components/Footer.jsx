@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="footer-left">
           <div className="footer-brand">ROBOSYNC</div>
           <div className="footer-meta">
-            Autonomous Cyber-Physical Warehouse System &bull; SIH Edition
+            Autonomous Cyber-Physical Warehouse System &bull; Fleet Edition
           </div>
         </div>
 

@@ -1,5 +1,5 @@
 """
-Zero-dependency embedded Web Fleet Control Center for Sterlebom Decentralized AMR Fleet.
+Zero-dependency embedded Web Fleet Control Center for RoboSync Decentralized AMR Fleet.
 Serves a professional responsive dark-mode web application on http://localhost:8080.
 Handles bidirectional simulation control (Pause, Resume, Speed, Reset, Scenarios, Obstacle Injection).
 """
@@ -15,7 +15,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STERLEBOM / ROBOSYNC — Fleet Control Center</title>
+    <title>ROBOSYNC — Fleet Control Center</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -176,7 +176,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
         /* ===================================================
-           SIH DEMONSTRATION CONTROLS PANEL
+           DEMONSTRATION CONTROLS PANEL
            =================================================== */
         .demo-controls-card {
             background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);

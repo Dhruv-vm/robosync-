@@ -1,5 +1,5 @@
 """
-Scenario definitions for the SIH 2026 hackathon demonstration.
+Scenario definitions for multi-AMR warehouse demonstrations.
 """
 from enum import Enum
 from typing import List, Dict, Any

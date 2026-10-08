@@ -1,16 +1,12 @@
-# 🤖 STERLEBOM / ROBOSYNC: Edge-AI Based Distributed Fleet Coordination for Autonomous Mobile Robots (AMRs) in Smart Warehouses
+# 🤖 RoboSync: Edge-AI Based Distributed Fleet Coordination for Autonomous Mobile Robots (AMRs) in Smart Warehouses
 
-[![SIH 2026](https://img.shields.io/badge/SIH-2026_Internal_Round-orange.svg)](https://www.sih.gov.in/)
-[![Problem Statement](https://img.shields.io/badge/Problem_Statement-SIH26123-blue.svg)](https://www.sih.gov.in/)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg)](https://www.python.org/)
 [![Physics Engine](https://img.shields.io/badge/Simulation-PyBullet_3D-red.svg)](https://pybullet.org/)
-[![Coordination](https://img.shields.io/badge/Architecture-100%25_Decentralized_P2P-purple.svg)]()
+[![Coordination](https://img.shields.io/badge/Architecture-Decentralized_P2P_Mesh-purple.svg)]()
 [![Collision Safety](https://img.shields.io/badge/Collision_Safety-ZERO_COLLISIONS-success.svg)]()
 
-> **Smart India Hackathon (SIH 2026) Prototype Demonstration**  
-> **Problem Statement ID:** `SIH26123`  
 > **Domain:** Robotics & Warehouse Automation / Edge AI  
-> **Team / Project Name:** STERLEBOM (ROBOSYNC)
+> **Project Name:** RoboSync
 
 ---
 
@@ -295,31 +291,30 @@ AMR-4      | IDLE             |  97.5%   | IDLE         | (22, 13)   | 1
 
 ---
 
-## 🎯 Hackathon Presentation Guide: What to Show the Judges
-
-When presenting to the SIH judges, follow this 4-step demonstration flow:
-
-1. **Step 1: Explain the Decentralized Paradigm (1 min)**
-   - Highlight that there is **NO central server** routing the robots.
-   - Explain how each AMR runs its own bidding agent and local A* path planner.
+## 🎯 Demonstration Guide: Technical Walkthrough
+ 
+When demonstrating the system, follow this 4-step demonstration flow:
+ 
+1. **Step 1: Explain the Decentralized Paradigm**
+   - Highlight that each AMR runs its own bidding engine and local A* path planner without a central routing broker.
 2. **Step 2: Run Normal Scenario & Demonstrate Contract Net Bidding (`N` key)**
-   - Show terminal logs where each robot independently computes its bid based on distance and battery.
+   - Show terminal logs where each robot independently computes its bid based on distance, battery, and workload.
    - Point out how tasks are distributed evenly across the fleet without central assignment.
 3. **Step 3: Trigger Dynamic Obstacle (`B` key) and Intersection Contention (`I` key)**
-   - Show the green/red path lines in PyBullet dynamically recalculating around the obstacle.
+   - Show the paths in PyBullet dynamically recalculating around the obstacle.
    - Show intersection priority resolution where one robot yields and the other proceeds without stopping.
 4. **Step 4: Trigger Hardware Fault Injection (`F` key)**
    - Show AMR-2 turning red (offline).
-   - Point out how AMR-2's task is instantly picked up by AMR-1 via P2P re-auctioning, proving zero single-point-of-failure.
+   - Point out how AMR-2's task is instantly picked up by peer AMRs via P2P re-auctioning, demonstrating resilience.
 5. **Step 5: Show the KPI Benchmark Table**
    - Point to the final summary table showing **`ZERO COLLISIONS (0) - PASSED PERFECTLY`**.
-
+ 
 ---
-
+ 
 ## 🔮 Future Roadmap: Migration to ROS 2 + Gazebo
-
-This PyBullet prototype serves as the internal hackathon proof-of-concept for the core decentralized intelligence. The production architecture for the Grand Finale will migrate to:
-
+ 
+This PyBullet prototype serves as the baseline proof-of-concept for the core decentralized intelligence. The production architecture will migrate to:
+ 
 ```mermaid
 graph LR
     subgraph Edge_AMR_Hardware ["Physical / Gazebo AMR Node"]
@@ -328,32 +323,31 @@ graph LR
         Zenoh["Eclipse Zenoh / CycloneDDS (P2P Mesh)"]
         MicroROS["Micro-ROS (ESP32 Motor Controller)"]
     end
-
+ 
     subgraph Monitoring_Layer ["Telemetry Dashboard"]
         FastAPI["FastAPI / WebSocket Server"]
         React["React.js Real-time Digital Twin"]
     end
-
+ 
     ROS2 <--> Zenoh
     Zenoh <--> FastAPI
     FastAPI <--> React
 ```
-
+ 
 - **ROS 2 Navigation (Nav2):** Replacing discrete grid with continuous 2D LiDAR costmaps and TEB/DWB local planners.
 - **P2P DDS Discovery (Eclipse Zenoh / CycloneDDS):** Implementing decentralized peer discovery without a central ROS master.
 - **FastAPI + WebSockets + React Dashboard:** Building a real-time web dashboard displaying 3D digital twin states and fleet telemetry for human warehouse operators.
-
+ 
 ---
-
+ 
 ## ⚠️ Prototype Scope & Known Limitations
-
-- **Discrete Grid Map with Continuous 3D Kinematics:** To guarantee deterministic verification during the hackathon round, path search operates on a 1.0m grid lattice while PyBullet renders 3D physical models with continuous steering and yaw interpolation.
-- **Synchronous Simulated P2P Bus:** Communication is simulated via an in-memory event bus with zero packet drop. In real-world deployment, UDP message retransmission and heartbeat timeouts will handle Wi-Fi packet loss.
-
+ 
+- **Discrete Grid Map with Continuous 3D Kinematics:** To guarantee deterministic verification, path search operates on a 1.0m grid lattice while PyBullet renders 3D physical models with continuous steering and yaw interpolation.
+- **Synchronous Simulated P2P Bus:** Communication is simulated via an in-memory event bus with zero packet drop. In real-world deployment, UDP message retransmission and heartbeat timeouts will handle wireless packet loss.
+ 
 ---
-
+ 
 ## 👥 Contributors & Acknowledgements
-
-- **Project:** STERLEBOM / ROBOSYNC
-- **Hackathon:** Smart India Hackathon (SIH 2026)
-- **Problem Statement:** SIH26123 – Edge-AI Based Distributed Fleet Coordination for Autonomous Mobile Robots in Smart Warehouses
+ 
+- **Project:** ROBOSYNC
+- **Domain:** Edge-AI Based Distributed Fleet Coordination for Autonomous Mobile Robots in Smart Warehouses

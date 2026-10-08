@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-STERLEBOM / ROBOSYNC - Edge-AI Based Distributed Fleet Coordination for Autonomous Mobile Robots (AMRs)
-SIH 2026 Internal Prototype Demonstration.
+ROBOSYNC - Edge-AI Based Distributed Fleet Coordination for Autonomous Mobile Robots (AMRs)
+Prototype Demonstration.
 """
 import argparse
 import sys
@@ -11,7 +11,7 @@ from utils.logger import FleetLogger
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="ROBOSYNC: Decentralized Multi-AMR Warehouse Fleet Simulation (SIH 2026)",
+        description="ROBOSYNC: Decentralized Multi-AMR Warehouse Fleet Simulation",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Scenarios:
@@ -104,7 +104,7 @@ def main():
     gui = not args.headless
     web_enabled = args.web_dashboard
     
-    FleetLogger.banner("STERLEBOM / ROBOSYNC: DECENTRALIZED AMR FLEET COORDINATION")
+    FleetLogger.banner("ROBOSYNC: DECENTRALIZED AMR FLEET COORDINATION")
     FleetLogger.info("System", f"Selected Scenario: {scenario.value.upper()}")
     FleetLogger.info("System", f"Active AMRs: {args.num_amrs} independent onboard agents")
     FleetLogger.info("System", f"PyBullet GUI Mode: {'ENABLED' if gui else 'DISABLED (HEADLESS)'}")

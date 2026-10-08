@@ -1,5 +1,5 @@
 """
-Comprehensive Unit and Integration Tests for Local A* Path Planning Module (STERLEBOM / ROBOSYNC - SIH 2026).
+Comprehensive Unit and Integration Tests for Local A* Path Planning Module (RoboSync).
 
 Covers all 10 critical validation domains:
 1. Shortest path in an open grid

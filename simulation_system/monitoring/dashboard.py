@@ -1,5 +1,5 @@
 """
-Professional Decentralized AMR Fleet Management & Telemetry Dashboard (STERLEBOM - SIH 2026).
+Professional Decentralized AMR Fleet Management & Telemetry Dashboard (RoboSync).
 Provides real-time observation, system metrics, robot status panels, and event logging.
 """
 from typing import List, Dict, Optional, Tuple, Any

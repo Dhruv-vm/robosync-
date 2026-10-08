@@ -1,6 +1,6 @@
 """
 Automated Integration and Verification Tests for Interactive Task Creation and Mission Execution.
-STERLEBOM / ROBOSYNC - SIH 2026
+RoboSync Decentralized Fleet Coordination.
 
 Validates:
 1. Task creation API / Command processor validation (Walkable floor cells, shelf rejections, dock rejections, same-cell rejections).
