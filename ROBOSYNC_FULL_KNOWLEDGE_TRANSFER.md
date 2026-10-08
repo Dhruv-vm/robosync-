@@ -10,7 +10,7 @@
 
 ## 1. Project Overview
 
-**RoboSync** (originally developed as *Sterlebom / RoboSync* for Smart India Hackathon - SIH Problem Statement `SIH26123`) is a decentralized, edge-intelligence-based fleet coordination platform for Autonomous Mobile Robots (AMRs) operating in high-density warehouse and fulfillment environments.
+**RoboSync** is a decentralized, edge-intelligence-based fleet coordination platform for Autonomous Mobile Robots (AMRs) operating in high-density warehouse and fulfillment environments.
 
 ### Core Problem
 Conventional automated warehouses typically rely on **centralized fleet managers** (e.g., a central dispatcher assigning all missions and a centralized Multi-Agent Path Finding [MAPF] server computing joint trajectories). Centralized architectures present critical failure modes:

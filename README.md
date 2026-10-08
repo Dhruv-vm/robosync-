@@ -6,7 +6,6 @@
 [![React 19](https://img.shields.io/badge/Frontend-React_19-blue.svg)](https://react.dev/)
 [![Physics Engine](https://img.shields.io/badge/Physics-PyBullet_3D-red.svg)](https://pybullet.org/)
 [![Architecture](https://img.shields.io/badge/Architecture-Decentralized_P2P_Mesh-purple.svg)]()
-[![SIH Problem Statement](https://img.shields.io/badge/Problem_Statement-SIH26123-orange.svg)](https://www.sih.gov.in/)
 
 ---
 
@@ -239,6 +238,3 @@ graph LR
 
 For the complete technical specification, algorithm deep-dive, research comparisons, and migration guidelines, refer to:
 👉 **[`ROBOSYNC_FULL_KNOWLEDGE_TRANSFER.md`](./ROBOSYNC_FULL_KNOWLEDGE_TRANSFER.md)**
-
----
-

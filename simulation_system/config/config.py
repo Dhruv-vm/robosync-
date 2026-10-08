@@ -1,5 +1,5 @@
 """
-Configuration parameters for the Sterlebom / Robosync Decentralized AMR Simulation.
+Configuration parameters for the RoboSync Decentralized AMR Simulation.
 """
 from dataclasses import dataclass, field
 from typing import Tuple, Dict, List
