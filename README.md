@@ -242,7 +242,3 @@ For the complete technical specification, algorithm deep-dive, research comparis
 
 ---
 
-## 👥 Contributors & Acknowledgements
-
-- **Project Name:** RoboSync (STERLEBOM)
-- **Problem Statement ID:** `SIH26123` – Edge-AI Based Distributed Fleet Coordination for Autonomous Mobile Robots in Smart Warehouses
